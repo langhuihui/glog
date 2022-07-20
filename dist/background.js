@@ -26,33 +26,35 @@ chrome.runtime.onConnect.addListener(port => {
   let tabId;
   if (isNumeric(port.name)) {
     tabId = +port.name;
-    if (!ports[tabId]) ports[tabId] = [];
-    ports[tabId][0] = port;
+    if (!ports[tabId]) ports[tabId] = [null];
+    ports[tabId].push(port);
     console.log('devtool-page connected ' + tabId, port.sender);
-    port.onMessage.addListener(msg => {
-      ports[tabId][1].postMessage(msg);
+    // port.onMessage.addListener(msg => {
+    //   ports[tabId][0].postMessage(msg);
+    // });
+    // if (ports[tabId][0]) {
+    //   port.postMessage('connect');
+    // }
+    port.onDisconnect.addListener(() => {
+      ports[tabId] = ports[tabId].splice(ports[tabId].indexOf(port), 1);
     });
-    if(ports[tabId][1]){
-      port.postMessage('connect');
-    }
   } else {
     tabId = port.sender.tab.id;
     if (!ports[tabId]) ports[tabId] = [];
-    ports[tabId][1] = port;
+    ports[tabId][0] = port;
     console.log('frontend connected ' + tabId);
     port.onMessage.addListener((message) => {
-      if (ports[tabId][0]) {
-        // console.log('backend -> devtools', message);
-        ports[tabId][0].postMessage(message);
-      }
+      ports[tabId].forEach((p, i) => {
+        if (i) p.postMessage(message);
+      });
     });
     port.onDisconnect.addListener(() => {
-      ports[tabId][1] = null;
+      ports[tabId][0] = null;
       console.log('frontend disconnected ' + tabId);
     });
-    if (ports[tabId][0]) {
-      ports[tabId][0].postMessage('connect');
-    }
+    ports[tabId].forEach((p, i) => {
+      if (i) p.postMessage('connect');
+    });
     // chrome.tabs.executeScript(tabId, {
     //   file: 'inject.js',
     // }, () => {

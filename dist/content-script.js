@@ -13,46 +13,25 @@ function inject(source) {
   }
 }
 inject(`
-(function (root) {
-  const origin = {
-    log: console.log,
-    debug: console.debug,
-    info: console.info,
-    warn: console.warn,
-    error: console.error,
-  };
-  root.GLOG = {
-    outputs: [],
-    log(...arg) {
-      window.dispatchEvent(new CustomEvent("log", { detail: arg.filter(x => typeof x != "object") }));
-    },
-    listen(types) {
-      for (let method in origin) {
-        if (types.includes(method)) {
-          console[method] = (...arg) => {
-            if (this.outputs.includes(method))
-              origin[method](...arg);
-            this.log(...arg);
-          };
-        } else {
-          console[method] = origin[method];
-        }
-      };
-    },
-  };
-})(window);
+function glog(obj) {
+  window.dispatchEvent(new CustomEvent("glog", { detail: obj }));
+}
 `);
 const port = chrome.runtime.connect({
   name: 'content-script'
 });
-port.onMessage.addListener((message) => {
-  inject(
-    `
-    GLOG.listen( ${JSON.stringify(message.listenTypes)});
-    GLOG.outputs = ${JSON.stringify(message.outputs)};
-    `
-  );
-})
-window.addEventListener('log', msg => {
-  port.postMessage(msg.detail);
+function getHandler(port) {
+  return msg => {
+    port.postMessage(msg.detail);
+  };
+}
+window.addEventListener('glog', getHandler(port));
+chrome.runtime.onConnect.addListener(function (port) {
+  if (port.name == 'popup') {
+    const handler = getHandler(port);
+    window.addEventListener('glog', handler);
+    port.onDisconnect.addListener(function () {
+      window.removeEventListener('glog', handler);
+    });
+  }
 });

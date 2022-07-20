@@ -13,6 +13,7 @@ specifiers:
   vite: ^2.9.9
   vue: ^3.2.25
   vue-tsc: ^0.34.7
+  webrtc-internals: ^0.0.8
 
 dependencies:
   '@vicons/tabler': 0.12.0
@@ -20,6 +21,7 @@ dependencies:
   fastrx: 3.2.0
   highlight.js: 11.5.1
   vue: 3.2.37
+  webrtc-internals: 0.0.8
 
 devDependencies:
   '@types/chrome': 0.0.190
@@ -1093,3 +1095,7 @@ packages:
   /webpack-virtual-modules/0.4.4:
     resolution: {integrity: sha512-h9atBP/bsZohWpHnr+2sic8Iecb60GxftXsWNLLLSqewgIsGzByd2gcIID4nXcG+3tNe4GQG3dLcff3kXupdRA==}
     dev: true
+
+  /webrtc-internals/0.0.8:
+    resolution: {integrity: sha512-xA/DE783dt3chGKa6C8kvXD94/yDO1utxIt/gK3ezrv7lM1TGpxQbYLdP9uWHnDXCMXBkO9mDvR4YdC9oBQ7qA==}
+    dev: false
