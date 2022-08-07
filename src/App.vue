@@ -63,7 +63,7 @@ function gotoGithub() {
   chrome.tabs.create({ url: "https://github.com/langhuihui/glog" });
 }
 function watchVideo() {
-  chrome.tabs.create({ url: "https://github.com/langhuihui/glog" });
+  chrome.tabs.create({ url: "https://www.bilibili.com/video/BV1ut4y1g7i7" });
 }
 </script>
 
