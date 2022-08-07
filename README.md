@@ -1,4 +1,4 @@
-# Group Log 
+# Graphic Log 
 [![OSCS Status](https://www.oscs1024.com/platform/badge/langhuihui/glog.svg?size=small)](https://www.oscs1024.com/project/langhuihui/glog?ref=badge_small)
 
 数值时间线日志显示工具(浏览器扩展)

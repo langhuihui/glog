@@ -15,7 +15,7 @@ In here, we can create our panel.
 Create a panel, and add listeners for panel show/hide events.
 */
 chrome.devtools.panels.create(
-  "超级日志",
+  "glog",
   "/logo.png",
   "/index.html"
   , (newPanel) => {
