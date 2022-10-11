@@ -4,8 +4,9 @@
 import { Error, LogoGithub, LogoYoutube, Unlink, Link } from '@vicons/carbon';
 import { nextTick, reactive, ref, toRaw, watch, watchEffect, WatchStopHandle } from 'vue';
 import { TimelineDataSeries, TimelineGraphView } from 'webrtc-internals';
-const dl = reactive({} as Record<string, { ds: TimelineDataSeries, gv?: TimelineGraphView; }>);
+const dl = reactive({} as Record<string, { ds: TimelineDataSeries | TimelineDataSeries[], gv?: TimelineGraphView; }>);
 const connected = ref(false);
+const colors = ['red', 'green', 'blue', 'yellow'];
 const reconnect = () => {
   try {
     const port = chrome.runtime.connect({
@@ -13,7 +14,7 @@ const reconnect = () => {
     });
     connected.value = true;
     console.log("Connected to background", port);
-    port.onMessage.addListener((data: Record<string, number> | 'connect') => {
+    port.onMessage.addListener((data: Record<string, number | number[]> | 'connect') => {
       if (data == 'connect') {
         console.log("content connected", port);
         if (!settings.prelog) {
@@ -21,17 +22,34 @@ const reconnect = () => {
         }
       } else {
         for (const key in data) {
-          if (dl[key]) {
-            dl[key].ds.addPoint(Date.now(), data[key]);
+          let num = data[key];
+          if (Array.isArray(num)) {
+            if (!dl[key]) {
+              const ds = num.map(x => new TimelineDataSeries());
+              dl[key] = { ds };
+              nextTick(() => {
+                const gv = new TimelineGraphView(document.getElementById(key) as HTMLCanvasElement);
+                ds.forEach((x, i) => {
+                  x.setColor(colors[i]);
+                  gv.addDataSeries(x);
+                });
+                dl[key].gv = gv;
+              });
+            }
+            num.forEach((x, i) => (dl[key].ds as TimelineDataSeries[])[i].addPoint(Date.now(), x));
             dl[key].gv?.updateEndDate();
           } else {
-            const ds = new TimelineDataSeries();
-            dl[key] = { ds };
-            nextTick(() => {
-              const gv = new TimelineGraphView(document.getElementById(key) as HTMLCanvasElement);
-              gv.addDataSeries(ds);
-              dl[key].gv = gv;
-            });
+            if (!dl[key]) {
+              const ds = new TimelineDataSeries();
+              dl[key] = { ds };
+              nextTick(() => {
+                const gv = new TimelineGraphView(document.getElementById(key) as HTMLCanvasElement);
+                gv.addDataSeries(ds);
+                dl[key].gv = gv;
+              });
+            }
+            (dl[key].ds as TimelineDataSeries).addPoint(Date.now(), num);
+            dl[key].gv?.updateEndDate();
           }
         }
       }
@@ -71,7 +89,7 @@ function watchVideo() {
   <n-layout>
     <n-layout-header>
       <n-space justify="space-between" class="title-bar">
-        <n-space  item-style="display: flex;" align="center">
+        <n-space item-style="display: flex;" align="center">
           <n-avatar :size="24" src="./logo.png">
           </n-avatar>
           <span class="title">Graphic Log</span>
